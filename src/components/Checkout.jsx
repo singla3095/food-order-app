@@ -5,6 +5,14 @@ import {currenyFormatter} from "../util/formatting.js";
 import Input from "./UI/Input.jsx";
 import Button from "./UI/Button.jsx";
 import userProgressContext from "../store/UserProgressContext.jsx";
+import useHttp from "../hooks/useHttp.js";
+
+const requestConfig = {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+}
 
 export default function Checkout() {
     const cartCtx = useContext(CartContext);
@@ -16,24 +24,22 @@ export default function Checkout() {
         userProgressCtx.hideCheckout();
     }
 
+    const {data, isLoading, error, sendRequest} = useHttp('http://localhost:3000/orders', requestConfig);
+
     function handleSubmit(event) {
         event.preventDefault();
 
         const fd = new FormData(event.target);
         const customerData = Object.fromEntries(fd.entries());
 
-        fetch('http://localhost:3000/orders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        sendRequest(
+            JSON.stringify({
                 order: {
                     items: cartCtx.items,
                     customer: customerData
                 }
             })
-        })
+        );
     }
 
     return <Modal open={userProgressCtx.progress === 'checkout'} onClose={handleClose}>
